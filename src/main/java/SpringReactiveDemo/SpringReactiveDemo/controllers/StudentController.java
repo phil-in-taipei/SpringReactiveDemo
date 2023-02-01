@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.PUT;
@@ -27,4 +28,23 @@ public class StudentController {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(studentService.getAllStudents(), Student.class));
     }
+
+    @Bean
+    RouterFunction<ServerResponse> updateStudentRoute() {
+        return route(PUT("/update-route/{id}"),
+                req -> {
+                    Integer studentId = Integer.parseInt(req.pathVariable("id"));
+                    Mono<Student> studentMono = req.bodyToMono(Student.class);
+                    return studentService.updateStudent(studentId, studentMono)
+                            .flatMap(student -> ServerResponse.ok()
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .body(Mono.just(student), Student.class))
+                            .switchIfEmpty(ServerResponse.notFound()
+                                    .build());
+                });
+    }
+
+
+
+
 }
